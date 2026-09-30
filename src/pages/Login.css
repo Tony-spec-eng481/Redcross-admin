@@ -1,0 +1,724 @@
+/* =========================================================
+   Red Cross Admin Login Styling
+   ========================================================= */
+
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 10% 20%, #1e1b2e 0%, #0f172a 60%, #080c16 100%);
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Background Ambient Glows & Motifs */
+.login-bg-decorations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.decor-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+}
+
+.decor-1 {
+  width: 420px;
+  height: 420px;
+  background: #dc2626;
+  top: -80px;
+  left: -80px;
+}
+
+.decor-2 {
+  width: 500px;
+  height: 500px;
+  background: #991b1b;
+  bottom: -100px;
+  right: -100px;
+  opacity: 0.12;
+}
+
+.decor-cross {
+  position: absolute;
+  color: rgba(220, 38, 38, 0.04);
+  font-size: 280px;
+  font-weight: 900;
+  user-select: none;
+  line-height: 1;
+}
+
+.decor-cross-1 {
+  top: 5%;
+  right: 8%;
+  transform: rotate(15deg);
+}
+
+.decor-cross-2 {
+  bottom: 0%;
+  left: 5%;
+  font-size: 200px;
+  transform: rotate(-10deg);
+}
+
+/* Master Container */
+.login-container {
+  display: flex;
+  width: 100%;
+  max-width: 1060px;
+  min-height: 620px;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------
+   Left Side: Red Cross Chapter Showcase
+   --------------------------------------------------------- */
+.login-left {
+  flex: 1.1;
+  background: linear-gradient(145deg, #b91c1c 0%, #991b1b 45%, #7f1d1d 100%);
+  color: #ffffff;
+  padding: 48px 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
+              radial-gradient(circle at 20% 80%, rgba(0, 0, 0, 0.25) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Red Cross Chapter Brand Badge */
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 2;
+}
+
+.cross-emblem {
+  width: 48px;
+  height: 48px;
+  background: #ffffff;
+  color: #dc2626;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cross-emblem:hover {
+  transform: scale(1.08) rotate(5deg);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.org-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #fecaca;
+  text-transform: uppercase;
+}
+
+.chapter-subtitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Hero Content */
+.login-hero-content {
+  margin: 32px 0;
+  z-index: 2;
+}
+
+.portal-pill {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+  margin-bottom: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.hero-heading {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  margin-bottom: 14px;
+}
+
+.hero-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #fee2e2;
+  margin-bottom: 28px;
+  opacity: 0.95;
+}
+
+.feature-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.feature-item:hover {
+  background: rgba(0, 0, 0, 0.25);
+  transform: translateX(4px);
+}
+
+.feature-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.feature-item strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.feature-item p {
+  font-size: 11px;
+  color: #fecaca;
+  margin: 0;
+}
+
+.hero-footer {
+  z-index: 2;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 16px;
+}
+
+.principles-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fecaca;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+}
+
+/* ---------------------------------------------------------
+   Right Side: Sign In Form Card
+   --------------------------------------------------------- */
+.login-right {
+  flex: 1;
+  padding: 48px 44px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.form-card {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.mobile-logo {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #b91c1c;
+  margin-bottom: 12px;
+}
+
+.mobile-cross {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.form-header h2 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.form-subtitle {
+  font-size: 13.5px;
+  color: #64748b;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+/* Demo Credentials Banner */
+.demo-credentials-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.demo-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.demo-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.demo-details {
+  font-size: 12px;
+  color: #334155;
+}
+
+.demo-details code {
+  background: #e2e8f0;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.demo-autofill-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.demo-autofill-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+/* Alerts */
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 20px;
+  animation: slideInDown 0.2s ease-out;
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.alert-error svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alert-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 18px;
+}
+
+.success-icon-badge {
+  width: 44px;
+  height: 44px;
+  background: #22c55e;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.success-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #14532d;
+  margin-bottom: 6px;
+}
+
+.success-content p {
+  font-size: 13px;
+  color: #166534;
+  margin-bottom: 16px;
+}
+
+.btn-secondary-link {
+  background: #ffffff;
+  border: 1px solid #86efac;
+  color: #15803d;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary-link:hover {
+  background: #dcfce7;
+}
+
+/* Inputs & Form Groups */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.input-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.input-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inline-link {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.inline-link:hover {
+  color: #991b1b;
+  text-decoration: underline;
+}
+
+.input-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transition: color 0.2s;
+}
+
+.input-field-wrapper input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  transition: all 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.input-field-wrapper input::placeholder {
+  color: #94a3b8;
+}
+
+.input-field-wrapper input:focus {
+  background: #ffffff;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.input-field-wrapper input:focus + .password-toggle-btn {
+  color: #64748b;
+}
+
+.input-field-wrapper:focus-within .input-icon {
+  color: #dc2626;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s;
+}
+
+.password-toggle-btn:hover {
+  color: #334155;
+  background: #f1f5f9;
+}
+
+/* Submit Action Button */
+.btn-submit-login {
+  margin-top: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.btn-submit-login:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-submit-login:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-submit-login:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-submit-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-loading-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Back Link in Forgot Password */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 14px;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #dc2626;
+}
+
+/* =========================================================
+   Responsive Breakpoints
+   ========================================================= */
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+    max-width: 520px;
+    min-height: auto;
+  }
+
+  .login-left {
+    padding: 36px 32px;
+  }
+
+  .login-hero-content {
+    margin: 20px 0;
+  }
+
+  .hero-heading {
+    font-size: 22px;
+  }
+
+  .feature-badges {
+    display: none; /* Hide secondary feature cards on tablet/mobile for cleaner compact view */
+  }
+
+  .login-right {
+    padding: 36px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 12px 10px;
+    align-items: flex-start;
+  }
+
+  .login-container {
+    border-radius: 16px;
+    margin: 12px 0;
+  }
+
+  .login-left {
+    padding: 28px 20px 24px;
+  }
+
+  .org-title {
+    font-size: 11px;
+  }
+
+  .chapter-subtitle {
+    font-size: 13px;
+  }
+
+  .hero-heading {
+    font-size: 19px;
+    margin-bottom: 8px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .hero-footer {
+    display: none;
+  }
+
+  .login-right {
+    padding: 28px 20px;
+  }
+
+  .form-header h2 {
+    font-size: 22px;
+  }
+
+  .demo-credentials-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .demo-autofill-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+}
