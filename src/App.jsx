@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Members from './pages/Members';
+import Leaders from './pages/Leaders';
 import Events from './pages/Events';
 import Gallery from './pages/Gallery';
 import FirstAid from './pages/FirstAid';
@@ -15,6 +17,14 @@ import './App.css';
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isResetFlow, setIsResetFlow] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('token') || window.location.pathname === '/reset-password') {
+      setIsResetFlow(true);
+    }
+  }, []);
 
   // Show nothing while checking token validity on mount
   if (loading) {
@@ -28,6 +38,10 @@ function AppContent() {
     );
   }
 
+  if (isResetFlow) {
+    return <ResetPassword onBackToLogin={() => setIsResetFlow(false)} />;
+  }
+
   if (!isAuthenticated) {
     return <Login />;
   }
@@ -36,6 +50,7 @@ function AppContent() {
     switch (currentPage) {
       case 'dashboard': return <Dashboard setCurrentPage={setCurrentPage} />;
       case 'members': return <Members />;
+      case 'leaders': return <Leaders />;
       case 'events': return <Events />;
       case 'gallery': return <Gallery />;
       case 'firstaid': return <FirstAid />;

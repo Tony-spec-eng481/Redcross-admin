@@ -15,6 +15,12 @@ const menuItems = [
       <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
   )},
+  { id: 'leaders', label: 'Leaders', icon: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="8" r="7"/>
+      <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+    </svg>
+  )},
   { id: 'events', label: 'Events', icon: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
