@@ -1,7 +1,14 @@
 import axios from 'axios';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || 'https://redcross-backend-gev6.onrender.com/api/v1';
-const API_BASE = rawApiUrl.replace(/\/+$/, '');
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000/api/v1';
+  }
+  const rawApiUrl = import.meta.env.VITE_API_URL || 'https://redcross-backend-gev6.onrender.com/api/v1';
+  return rawApiUrl.replace(/\/+$/, '');
+};
+
+const API_BASE = getApiBaseUrl();
 
 /**
  * Axios instance with auth token injection and auto-refresh.
@@ -15,7 +22,7 @@ const api = axios.create({
 // ── Request interceptor: attach access token ──
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -59,7 +66,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token');
 
         const { data } = await axios.post(`${API_BASE}/auth/refresh`, {
@@ -69,8 +76,10 @@ api.interceptors.response.use(
         const newAccessToken = data.data.accessToken;
         const newRefreshToken = data.data.refreshToken;
 
-        localStorage.setItem('accessToken', newAccessToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
+        sessionStorage.setItem('accessToken', newAccessToken);
+        sessionStorage.setItem('refreshToken', newRefreshToken);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
 
         api.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
@@ -80,6 +89,10 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         // Clear tokens and redirect to login
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('admin');
+        sessionStorage.removeItem('admin_last_activity');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('admin');

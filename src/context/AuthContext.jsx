@@ -1,17 +1,35 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
 
 const AuthContext = createContext();
+const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in ms
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, check if we have stored tokens and validate them
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore logout API errors
+    }
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('admin');
+    sessionStorage.removeItem('admin_last_activity');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('admin');
+    setIsAuthenticated(false);
+    setAdmin(null);
+  }, []);
+
+  // On mount, check stored tokens and validate them
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const storedAdmin = localStorage.getItem('admin');
+    const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+    const storedAdmin = sessionStorage.getItem('admin') || localStorage.getItem('admin');
 
     if (token && storedAdmin) {
       setAdmin(JSON.parse(storedAdmin));
@@ -22,10 +40,16 @@ export function AuthProvider({ children }) {
         .then(res => {
           const adminData = res.data.data;
           setAdmin(adminData);
-          localStorage.setItem('admin', JSON.stringify(adminData));
+          sessionStorage.setItem('admin', JSON.stringify(adminData));
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('admin');
         })
         .catch(() => {
-          // Token invalid — clear everything
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
+          sessionStorage.removeItem('admin');
+          sessionStorage.removeItem('admin_last_activity');
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('admin');
@@ -38,14 +62,64 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // 30-Minute Inactivity Auto-Logout Tracker
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const checkInactivity = () => {
+      const lastActivityStr = sessionStorage.getItem('admin_last_activity');
+      if (lastActivityStr) {
+        const elapsed = Date.now() - parseInt(lastActivityStr, 10);
+        if (elapsed >= INACTIVITY_LIMIT) {
+          logout();
+        }
+      } else {
+        sessionStorage.setItem('admin_last_activity', Date.now().toString());
+      }
+    };
+
+    checkInactivity();
+
+    let lastRecorded = 0;
+    const updateActivity = () => {
+      const now = Date.now();
+      if (now - lastRecorded > 2000) {
+        lastRecorded = now;
+        sessionStorage.setItem('admin_last_activity', now.toString());
+      }
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(evt => window.addEventListener(evt, updateActivity, { passive: true }));
+
+    const timer = setInterval(checkInactivity, 10000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkInactivity();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, updateActivity));
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated, logout]);
+
   const login = async (email, password) => {
     try {
       const res = await api.post('/auth/login', { email, password });
       const { accessToken, refreshToken, admin: adminData } = res.data.data;
 
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('admin', JSON.stringify(adminData));
+      sessionStorage.setItem('accessToken', accessToken);
+      sessionStorage.setItem('refreshToken', refreshToken);
+      sessionStorage.setItem('admin', JSON.stringify(adminData));
+      sessionStorage.setItem('admin_last_activity', Date.now().toString());
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('admin');
 
       setAdmin(adminData);
       setIsAuthenticated(true);
@@ -56,25 +130,12 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-      // Ignore logout API errors
-    }
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('admin');
-    setIsAuthenticated(false);
-    setAdmin(null);
-  };
-
   const updateProfile = async (data) => {
     try {
       const res = await api.patch('/auth/me', data);
       const updated = res.data.data;
       setAdmin(updated);
-      localStorage.setItem('admin', JSON.stringify(updated));
+      sessionStorage.setItem('admin', JSON.stringify(updated));
       return { success: true };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Update failed.' };
@@ -94,7 +155,7 @@ export function AuthProvider({ children }) {
     try {
       await api.patch('/auth/notification-preferences', prefs);
       setAdmin(prev => ({ ...prev, notification_preferences: prefs }));
-      localStorage.setItem('admin', JSON.stringify({ ...admin, notification_preferences: prefs }));
+      sessionStorage.setItem('admin', JSON.stringify({ ...admin, notification_preferences: prefs }));
       return { success: true };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Update failed.' };
