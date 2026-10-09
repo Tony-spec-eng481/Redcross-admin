@@ -9,6 +9,7 @@ import Leaders from './pages/Leaders';
 import Events from './pages/Events';
 import Gallery from './pages/Gallery';
 import FirstAid from './pages/FirstAid';
+import Dissemination from './pages/Dissemination';
 import Messages from './pages/Messages';
 import Questions from './pages/Questions';
 import Profile from './pages/Profile';
@@ -54,6 +55,7 @@ function AppContent() {
       case 'events': return <Events />;
       case 'gallery': return <Gallery />;
       case 'firstaid': return <FirstAid />;
+      case 'dissemination': return <Dissemination />;
       case 'messages': return <Messages />;
       case 'questions': return <Questions />;
       case 'profile': return <Profile />;

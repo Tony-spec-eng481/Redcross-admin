@@ -43,6 +43,7 @@ export default function Gallery() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [batchQueue, setBatchQueue] = useState([]);
 
   // Reject modal
   const [rejectingItem, setRejectingItem] = useState(null);
@@ -112,29 +113,84 @@ export default function Gallery() {
     });
   }, [gallery, filter, searchTerm, categoryFilter]);
 
-  // Image upload handler
+  // Image upload handler (supports single or multiple files)
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', 'gallery');
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setUploading(true);
     try {
-      const res = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      if (res.data?.success && res.data?.data?.url) {
-        setForm(prev => ({ ...prev, image_url: res.data.data.url }));
-        showToast('Image uploaded successfully!');
+      if (files.length === 1 && batchQueue.length === 0 && !editingId && !form.image_url) {
+        const formData = new FormData();
+        formData.append('file', files[0]);
+        formData.append('folder', 'gallery');
+
+        const res = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        if (res.data?.success && res.data?.data?.url) {
+          setForm(prev => ({
+            ...prev,
+            image_url: res.data.data.url,
+            title: prev.title || files[0].name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ')
+          }));
+          showToast('Image uploaded successfully!');
+        }
+      } else {
+        // Multi-image upload
+        let uploaded = [];
+        try {
+          const formData = new FormData();
+          files.forEach(f => formData.append('files', f));
+          formData.append('folder', 'gallery');
+
+          const res = await api.post('/upload/multiple', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+
+          if (res.data?.success && Array.isArray(res.data.data)) {
+            uploaded = res.data.data.map((item, idx) => ({
+              url: item.url,
+              title: files[idx]?.name ? files[idx].name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') : `Photo ${idx + 1}`
+            }));
+          }
+        } catch (mErr) {
+          console.warn('Batch upload endpoint failed, falling back to sequential single upload', mErr);
+          for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'gallery');
+            const res = await api.post('/upload', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            if (res.data?.success && res.data?.data?.url) {
+              uploaded.push({
+                url: res.data.data.url,
+                title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ')
+              });
+            }
+          }
+        }
+
+        if (uploaded.length > 0) {
+          let initialQueue = [...batchQueue];
+          if (form.image_url && initialQueue.length === 0) {
+            initialQueue.push({
+              url: form.image_url,
+              title: form.title || 'Photo 1'
+            });
+            setForm(prev => ({ ...prev, image_url: '' }));
+          }
+          setBatchQueue([...initialQueue, ...uploaded]);
+          showToast(`Uploaded ${uploaded.length} photo(s) to batch queue!`);
+        }
       }
     } catch (err) {
       console.error('Upload error:', err);
-      showToast('Failed to upload image.', 'error');
+      showToast('Failed to upload image(s).', 'error');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -142,12 +198,14 @@ export default function Gallery() {
   const openCreateModal = () => {
     setEditingId(null);
     setForm(INITIAL_FORM);
+    setBatchQueue([]);
     setShowModal(true);
   };
 
   // Open edit modal
   const openEditModal = (item) => {
     setEditingId(item.id);
+    setBatchQueue([]);
     setForm({
       title: item.title || '',
       image_url: item.image_url || '',
@@ -161,6 +219,36 @@ export default function Gallery() {
   // Save gallery item (create or update)
   const handleSave = async (e) => {
     e.preventDefault();
+
+    // If batch queue is present
+    if (batchQueue.length > 0 && !editingId) {
+      setSaving(true);
+      try {
+        const payload = {
+          items: batchQueue.map(item => ({
+            title: item.title?.trim() || form.title || 'Red Cross Moment',
+            image_url: item.url,
+            category: form.category || 'General',
+            description: form.description || '',
+            is_favourite: form.is_favourite || false
+          }))
+        };
+        await api.post('/admin/gallery', payload);
+        showToast(`${batchQueue.length} photos added successfully!`);
+        setShowModal(false);
+        setForm(INITIAL_FORM);
+        setBatchQueue([]);
+        setEditingId(null);
+        fetchGallery();
+      } catch (err) {
+        console.error('Batch save error:', err);
+        showToast('Failed to save batch photos.', 'error');
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     if (!form.image_url) {
       showToast('Please upload or enter an image URL.', 'error');
       return;
@@ -176,6 +264,7 @@ export default function Gallery() {
       }
       setShowModal(false);
       setForm(INITIAL_FORM);
+      setBatchQueue([]);
       setEditingId(null);
       fetchGallery();
     } catch (err) {
@@ -443,49 +532,89 @@ export default function Gallery() {
               <button className="gal-modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleSave} className="gal-modal-body">
-              {/* Image Upload */}
-              <div className="gal-form-group">
-                <label>Image</label>
-                <div className="gal-upload-area">
-                  {form.image_url ? (
-                    <div className="gal-upload-preview">
-                      <img src={form.image_url} alt="Preview" />
-                      <button type="button" className="gal-upload-remove" onClick={() => setForm(prev => ({ ...prev, image_url: '' }))}>
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="gal-upload-dropzone">
-                      <Upload size={28} />
-                      <span>Click to upload image</span>
-                      <span className="gal-upload-hint">JPG, PNG, WebP — max 10MB</span>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
+              {batchQueue.length > 0 && !editingId ? (
+                <div className="gal-form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <label style={{ margin: 0, fontWeight: 700 }}>Upload Queue ({batchQueue.length} photos)</label>
+                    <label className="gal-btn gal-btn-outline" style={{ padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>
+                      <Plus size={13} /> Add More Photos
+                      <input type="file" accept="image/*" multiple onChange={handleImageUpload} hidden />
                     </label>
-                  )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 250, overflowY: 'auto', paddingRight: 4, marginBottom: 8 }}>
+                    {batchQueue.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#f8fafc', padding: 8, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                        <img src={item.url} alt={`Upload ${idx}`} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                        <input
+                          type="text"
+                          value={item.title}
+                          placeholder={`Title for photo #${idx + 1}`}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setBatchQueue(prev => prev.map((q, i) => i === idx ? { ...q, title: val } : q));
+                          }}
+                          style={{ flex: 1, padding: '6px 10px', fontSize: 13, border: '1px solid #cbd5e1', borderRadius: 6 }}
+                        />
+                        <button
+                          type="button"
+                          className="gal-action-btn gal-action-delete"
+                          style={{ width: 32, height: 32, flexShrink: 0 }}
+                          onClick={() => setBatchQueue(prev => prev.filter((_, i) => i !== idx))}
+                          title="Remove from upload queue"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {uploading && <p className="gal-uploading">Uploading...</p>}
-                <div className="gal-url-input">
-                  <span>Or paste URL:</span>
-                  <input
-                    type="text"
-                    placeholder="https://example.com/image.jpg"
-                    value={form.image_url}
-                    onChange={(e) => setForm(prev => ({ ...prev, image_url: e.target.value }))}
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  {/* Image Upload */}
+                  <div className="gal-form-group">
+                    <label>Image (Upload single or multiple files)</label>
+                    <div className="gal-upload-area">
+                      {form.image_url ? (
+                        <div className="gal-upload-preview">
+                          <img src={form.image_url} alt="Preview" />
+                          <button type="button" className="gal-upload-remove" onClick={() => setForm(prev => ({ ...prev, image_url: '' }))}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="gal-upload-dropzone">
+                          <Upload size={28} />
+                          <span>Click to upload images</span>
+                          <span className="gal-upload-hint">JPG, PNG, WebP — select one or multiple files</span>
+                          <input type="file" accept="image/*" multiple onChange={handleImageUpload} hidden />
+                        </label>
+                      )}
+                    </div>
+                    {uploading && <p className="gal-uploading">Uploading...</p>}
+                    <div className="gal-url-input">
+                      <span>Or paste URL:</span>
+                      <input
+                        type="text"
+                        placeholder="https://example.com/image.jpg"
+                        value={form.image_url}
+                        onChange={(e) => setForm(prev => ({ ...prev, image_url: e.target.value }))}
+                      />
+                    </div>
+                  </div>
 
-              {/* Title */}
-              <div className="gal-form-group">
-                <label>Title</label>
-                <input
-                  type="text"
-                  placeholder="Enter a title for this photo"
-                  value={form.title}
-                  onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                  required
-                />
-              </div>
+                  {/* Title */}
+                  <div className="gal-form-group">
+                    <label>Title</label>
+                    <input
+                      type="text"
+                      placeholder="Enter a title for this photo"
+                      value={form.title}
+                      onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                      required={!batchQueue.length}
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Category */}
               <div className="gal-form-group">
@@ -522,8 +651,8 @@ export default function Gallery() {
 
               <div className="gal-modal-footer">
                 <button type="button" className="gal-btn gal-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="gal-btn gal-btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : editingId ? 'Update Photo' : 'Add Photo'}
+                <button type="submit" className="gal-btn gal-btn-primary" disabled={saving || uploading}>
+                  {saving ? 'Saving...' : editingId ? 'Update Photo' : batchQueue.length > 0 ? `Upload ${batchQueue.length} Photos` : 'Add Photo'}
                 </button>
               </div>
             </form>

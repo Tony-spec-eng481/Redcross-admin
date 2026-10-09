@@ -22,7 +22,10 @@ import {
   AlertCircle,
   Check,
   Ban,
-  PlayCircle
+  PlayCircle,
+  Key,
+  Lock,
+  ShieldAlert
 } from 'lucide-react';
 
 const ROLES = [
@@ -44,6 +47,7 @@ const INITIAL_FORM = {
   phone: '',
   role: 'Member',
   status: 'active',
+  password: 'Redcross',
   joined: new Date().toISOString().split('T')[0],
   notes: ''
 };
@@ -175,7 +179,7 @@ function Members() {
   // Open Add Member Modal
   const handleOpenAdd = () => {
     setEditingId(null);
-    setForm(INITIAL_FORM);
+    setForm({ ...INITIAL_FORM, password: 'Redcross' });
     setFormErrors({});
     setShowAddEditModal(true);
   };
@@ -189,12 +193,39 @@ function Members() {
       phone: m.phone || '',
       role: m.role || 'Member',
       status: m.status || 'active',
+      password: '',
       joined: m.joined ? m.joined.split('T')[0] : new Date().toISOString().split('T')[0],
       notes: m.notes || ''
     });
     setFormErrors({});
     setShowAddEditModal(true);
     if (viewingMember) setViewingMember(null);
+  };
+
+  // Open Reset Password Dialog
+  const handleOpenReset = (m) => {
+    setResettingMember(m);
+    setResetPasswordInput('Redcross');
+  };
+
+  // Confirm Reset Password
+  const handleConfirmReset = async () => {
+    if (!resettingMember) return;
+    setIsResetting(true);
+    try {
+      const res = await api.post(`/admin/members/${resettingMember.id}/reset-password`, {
+        newPassword: resetPasswordInput.trim() || 'Redcross'
+      });
+      if (res.data.success) {
+        showToast(`Password for "${resettingMember.name}" reset to "${resetPasswordInput.trim() || 'Redcross'}" and email dispatched.`);
+        setResettingMember(null);
+      }
+    } catch (err) {
+      console.error('Password reset error:', err);
+      showToast(err.response?.data?.message || 'Failed to reset member password', 'error');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   // Validate form
@@ -389,7 +420,7 @@ function Members() {
           </button>
           <button className="btn-primary" onClick={handleOpenAdd}>
             <UserPlus size={16} />
-            <span>+ Add Member</span>
+            <span>Add Member</span>
           </button>
         </div>
       </div>
@@ -832,6 +863,25 @@ function Members() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
                 <span className="form-helper-text">Optional notes or chapter qualifications.</span>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Lock size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                  Member Password (Default: Redcross)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    placeholder="Redcross"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  />
+                </div>
+                <span className="form-helper-text" style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                  <ShieldAlert size={13} style={{ flexShrink: 0, marginTop: 2, color: '#ef4444' }} />
+                  Default password is "Redcross". The member will receive their login credentials in their email after registration along with a guide on how to change it in their profile section.
+                </span>
               </div>
 
               <div className="form-actions" style={{ marginTop: 24 }}>

@@ -490,6 +490,18 @@
   transform: translateY(-1px);
 }
 
+.btn-action-key {
+  background: #fef3c7;
+  color: #d97706;
+  border-color: #fde68a;
+}
+.btn-action-key:hover {
+  background: #d97706;
+  color: #ffffff;
+  border-color: #d97706;
+  transform: translateY(-1px);
+}
+
 .btn-action-view {
   background: #f8fafc;
   color: #475569;

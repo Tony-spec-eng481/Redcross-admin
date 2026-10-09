@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5000/api/v1';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'https://redcross-backend-gev6.onrender.com/api/v1';
+const API_BASE = rawApiUrl.replace(/\/+$/, '');
 
 /**
  * Axios instance with auth token injection and auto-refresh.

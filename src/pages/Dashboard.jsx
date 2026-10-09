@@ -467,7 +467,7 @@ export default function Dashboard({ setCurrentPage }) {
           </button>
 
           <a
-            href="http://localhost:5173"
+            href={import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173"}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-dash-outline"
